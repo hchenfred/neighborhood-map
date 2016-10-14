@@ -2,32 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
     <title>My Lunch Place</title>
 </head>
 <body>
     <aside>
-        <div>
-          <span class="text">Search for nearby places Using Google</span>
-          <input id="places-search" type="text" placeholder="Ex: Pizza delivery in NYC">
-          <input id="go-places" type="button" value="Go">  
-        </div>
-        <div>
+        <div class="input-area">
           <span class="text">Search for nearby places Using Yelp</span>
-          <input id="places-search" type="text" placeholder="Ex: Pizza delivery in NYC">
-          <input id="go-places" type="button" value="Go">  
+          <input id="pac-input" type="text" data-bind="value: location" placeholder="Enter a location" size="50">
+          <input id="yelp-places" type="button" data-bind="click: yelpRequest" value="Go">  
         </div>
        
     </aside>
     <div id="map">
     </div>
 
-    <script>
-     // TODO: Complete the following function to initialize the map
-     
-        
-
-   </script>
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
     <script src="js/lib/jquery.min.js"></script>
     <script src= "js/lib/hmac-sha1.js"></script>
