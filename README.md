@@ -8,6 +8,7 @@
 * add an input element to allow users to enter a location used for Yelp search. location is a knockout observable.
 * enable autocomplete with Google Place Autocomplete API. [link](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete)
 * add markers on Google Map using the results from Yelp search.
+* show info window on markers with "mouseover" and "mouseout" event listener
 
 
 
@@ -23,5 +24,5 @@
     async defer></script>
 ```
 * To use a knockout observable, it should be used like a function. For example, instead of this.location, this.location() should be used.
-
 * To assign observable a value, must use ko.observable(valueToBeAssigned)
+* Use closure to handle markers event listener

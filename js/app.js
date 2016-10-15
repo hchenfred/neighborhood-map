@@ -67,6 +67,7 @@ var initMap = function() {
 var ViewModel = function() {
     var self = this;
     self.location = ko.observable('');
+    self.markers = ko.observableArray();
     self.yelpRequest = function() {
       function nonce_generate() {
         return (Math.floor(Math.random() * 1e12).toString());
@@ -99,20 +100,59 @@ var ViewModel = function() {
           new google.maps.Size(40, 40)
       );  
 
-      function processYelpResults(results) {
-        var businesses = results.businesses;
-          for (var i = 0; i < businesses.length; i++) {
-            var currBusiness = businesses[i];
-            var currLocation = currBusiness.location.coordinate;
-            var coordinates = {lat: currLocation.latitude, lng: currLocation.longitude};
-            var marker = new google.maps.Marker({
-                map: map,
-                icon: pinIcon,
-                draggable: true,
-                animation: google.maps.Animation.DROP,
-                position: coordinates
-            });
+
+      function createInfoWindow(r) {
+        var text = '<div>';
+        text += '<a href="' + r.url + '" target="_blank" class="name">' + r.name + '</a><br/>';
+        text += '<img class="ratingsimage" src="' + r.rating_img_url + '"/>';
+        text += r.review_count + ' Reviews<br/><br/>';
+        for (var i = 0; i < r.categories.length; i++) {
+          if (i === r.categories.length - 1) {
+            text += '<span id="yelp-category">' + r.categories[i][0] + '  </span>';
+          } else {
+            text += '<span id="yelp-category">' + r.categories[i][0] + ',  </span>';
           }
+        }
+        text += '<br/>'
+        text += r.location.display_address[0] + '<br/>' + r.location.display_address[1] + ', ' + r.location.display_address[2] + '<br/><br/>';
+        text += '</div>';
+        return text;
+      }
+
+      function processYelpResults(results) {
+        //remove all markers on the map first
+        //setMapOnAll(null);
+        var businesses = results.businesses;
+        for (var i = 0; i < businesses.length; i++) {
+          var currBusiness = businesses[i];
+          var currLocation = currBusiness.location.coordinate;
+          var coordinates = {lat: currLocation.latitude, lng: currLocation.longitude};
+          
+          var marker = new google.maps.Marker({
+              map: map,
+              icon: pinIcon,
+              draggable: true,
+              animation: google.maps.Animation.DROP,
+              position: coordinates
+          });
+          self.markers().push(marker);
+          var contentString = createInfoWindow(currBusiness);
+          var infowindow = new google.maps.InfoWindow({
+            content: contentString
+          });
+          self.markers()[i].addListener('mouseover', (function(x, infowindow) {
+            
+            return function() {
+              infowindow.open(map, self.markers()[x]);
+            };
+          })(i, infowindow));
+          
+          self.markers()[i].addListener('mouseout', (function(x, infowindow) {
+            return function() {
+              infowindow.close();
+            }
+          })(i, infowindow));
+        }
       }
 
       var settings = {
