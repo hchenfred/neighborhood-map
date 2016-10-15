@@ -63,18 +63,35 @@ var initMap = function() {
         });
 };
 
+// Sets the map on all markers in the array.
+function setMapOnAll(map, markers) {
+  for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+  }
+}
+
 
 var ViewModel = function() {
     var self = this;
-    self.location = ko.observable('');
+    self.location = ko.observable('San Francisco');
     self.markers = ko.observableArray();
+    function isEmpty(obj) {
+        for(var key in obj) {
+            if(obj.hasOwnProperty(key))
+                return false;
+        }
+        return true;
+    }
+
     self.yelpRequest = function() {
       function nonce_generate() {
         return (Math.floor(Math.random() * 1e12).toString());
       }
-      
-      self.location = ko.observable(place.formatted_address);
-
+      //console.log(place);
+      if (!isEmpty(place)) {
+        console.log("place is not empty");
+        self.location = ko.observable(place.formatted_address);
+      }
       var yelp_url = 'https://api.yelp.com/v2/search?';
       var parameters = {
         term: 'food',
@@ -122,6 +139,9 @@ var ViewModel = function() {
       function processYelpResults(results) {
         //remove all markers on the map first
         //setMapOnAll(null);
+
+        setMapOnAll(null, self.markers());
+        self.markers.removeAll();
         var businesses = results.businesses;
         for (var i = 0; i < businesses.length; i++) {
           var currBusiness = businesses[i];
@@ -140,8 +160,7 @@ var ViewModel = function() {
           var infowindow = new google.maps.InfoWindow({
             content: contentString
           });
-          self.markers()[i].addListener('mouseover', (function(x, infowindow) {
-            
+          self.markers()[i].addListener('mouseover', (function(x, infowindow) {          
             return function() {
               infowindow.open(map, self.markers()[x]);
             };
@@ -167,19 +186,13 @@ var ViewModel = function() {
           
         },
         error: function(error) {
-          alert('Yelp API response error' + error);
+          alert('Yelp API response error ' + error);
         }
       };
 
       // Send AJAX query via jQuery library.
       $.ajax(settings);
     };
-
-
-
-
-
-
 };
 
 ko.applyBindings(new ViewModel());
