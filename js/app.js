@@ -8,69 +8,69 @@ var place = {};
 
 //** ViewModel **//
 var initMap = function() {
-          map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: 37.7779436, lng: -122.4152976},  
-          zoom: 14
-        });
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: {lat: 37.7779436, lng: -122.4152976},  
+      zoom: 14
+    });
 
 
-        var input = /** @type {!HTMLInputElement} */(
-            document.getElementById('pac-input'));
+    var input = /** @type {!HTMLInputElement} */(
+        document.getElementById('pac-input'));
 
-        var autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.bindTo('bounds', map);
+    var autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.bindTo('bounds', map);
 
-        var infowindow = new google.maps.InfoWindow();
-        var marker = new google.maps.Marker({
-          map: map,
-          anchorPoint: new google.maps.Point(0, -29)
-        });
+    var infowindow = new google.maps.InfoWindow();
+    var marker = new google.maps.Marker({
+      map: map,
+      anchorPoint: new google.maps.Point(0, -29)
+    });
 
-        autocomplete.addListener('place_changed', function() {
-          infowindow.close();
-          marker.setVisible(false);
-          place = autocomplete.getPlace();
-          console.log(self.location);
-          
-          console.log(place);
-          if (!place.geometry) {
-            window.alert("Autocomplete's returned place contains no geometry");
-            return;
-          }
+    autocomplete.addListener('place_changed', function() {
+      infowindow.close();
+      marker.setVisible(false);
+      place = autocomplete.getPlace();
+      console.log(self.location);
+      
+      console.log(place);
+      if (!place.geometry) {
+        window.alert("Autocomplete's returned place contains no geometry");
+        return;
+      }
 
-          // If the place has a geometry, then present it on a map.
-          if (place.geometry.viewport) {
-            map.fitBounds(place.geometry.viewport);
-            map.setCenter(place.geometry.location);
-            map.setZoom(15);
-          } else {
-            map.setCenter(place.geometry.location);
-            map.setZoom(15);  
-          }
-          marker.setIcon(/** @type {google.maps.Icon} */({
-            url: place.icon,
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(35, 35)
-          }));
-          marker.setPosition(place.geometry.location);
-          marker.setVisible(true);
+      // If the place has a geometry, then present it on a map.
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);  
+      }
+      marker.setIcon(/** @type {google.maps.Icon} */({
+        url: place.icon,
+        size: new google.maps.Size(71, 71),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(17, 34),
+        scaledSize: new google.maps.Size(35, 35)
+      }));
+      marker.setPosition(place.geometry.location);
+      marker.setVisible(true);
 
-          /*var address = '';
-          if (place.address_components) {
-            address = [
-              (place.address_components[0] && place.address_components[0].short_name || ''),
-              (place.address_components[1] && place.address_components[1].short_name || ''),
-              (place.address_components[2] && place.address_components[2].short_name || '')
-            ].join(' ');
-          }
+      /*var address = '';
+      if (place.address_components) {
+        address = [
+          (place.address_components[0] && place.address_components[0].short_name || ''),
+          (place.address_components[1] && place.address_components[1].short_name || ''),
+          (place.address_components[2] && place.address_components[2].short_name || '')
+        ].join(' ');
+      }
 
-          infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-          infowindow.open(map, marker);
-          */
-        });
-        yelpRequest('San Francisco');
+      infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+      infowindow.open(map, marker);
+      */
+    });
+    yelpRequest('San Francisco');
 };
 
 
@@ -106,15 +106,16 @@ function yelpRequest(loc, categoryFilter='') {
     function nonce_generate() {
       return (Math.floor(Math.random() * 1e12).toString());
     }
+    //console.log("location is " + loc);
     if (!isEmpty(place)) {
-      console.log("place is not empty");
       loc = place.formatted_address;
     }
     var yelp_url = 'https://api.yelp.com/v2/search?';
     var parameters = {
-      term: 'food',
+      term: 'restaurants',
       location: loc,
       category_filter: categoryFilter,
+      //sort: 2,
       oauth_consumer_key: 'XPzZeqwKT1WcLNLZ-quVHA',
       oauth_token: '_HQnAhO1FXLMlv4c7Ivq231XQKyqais4',
       oauth_nonce: nonce_generate(),
@@ -225,16 +226,27 @@ function isEmpty(obj) {
 }
 
 
-
-
 var ViewModel = function() {
     var self = this;
-    self.location = ko.observable('');
+    self.location = ko.observable('San Francisco');
     self.businesses = ko.observableArray();
+    self.availableCountries = ['All', 'Delis', 'Burgers', 'Asian Fusion', 'Vietnamese', 'Greek'];
+    self.selectedCategory = ko.observable('All');
    
     self.requestNewPlace = function() {
         console.log('yelp response is ' + yelpRequest(self.location()));
     };
+    self.categoryChanged = function() {
+        //console.log('current category is ' + self.selectedCategory());
+        if (self.selectedCategory() === 'All') {
+          self.requestNewPlace();
+        } else {
+          var formattedCategory = self.selectedCategory().replace(/\s+/g, '').toLowerCase();
+          console.log(formattedCategory);
+          yelpRequest(self.location(), formattedCategory);
+        }
+
+    }
 };
 
 var viewModel = new ViewModel();

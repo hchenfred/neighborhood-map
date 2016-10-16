@@ -1,5 +1,12 @@
 
 ============================
+## Instructions
+* Enter the address where you would like to search your lunch places.
+The app lists 20 places to eat around the address that your entered.
+* When your mouse hovers over a place on Google Map, an informaiton window will pop up showing the information of the place. 
+* When you click a list item from the list view on the left, the information window from the corresponding marker on Google Map will pop up.
+* You could choose a category from the pull down list.
+
 
 ## Development Steps
 
@@ -11,13 +18,7 @@
 * show info window on markers with "mouseover" and "mouseout" event listener
 
 
-
-
-
 ## Things Learned
-
-# Google Places API
-
 * To include "libraires=places"
 ```
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyChkGJbVaG7HZWDAiSsyXe_7mupndlvMyU&libraries=places&callback=initMap"
@@ -26,3 +27,9 @@
 * To use a knockout observable, it should be used like a function. For example, instead of this.location, this.location() should be used.
 * To assign observable a value, must use ko.observable(valueToBeAssigned)
 * Use closure to handle markers event listener
+* knockout framework does not need event listener, it uses data binding instead
+
+## Challenge Faced
+* How to organize code (Google Map, Yelp API and knockout should be separated)
+* How to decide which variables are in knockout viewMode? Think about whether the variable has interactions with DOM element
+* Set eventlistener in a for loop (use JavaScript closure)

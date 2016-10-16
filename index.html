@@ -13,11 +13,15 @@
         <div id="input-area">
           <p class="h5">Search nearby places using Yelp</p>
           <input id="pac-input" type="text" data-bind="value: location" placeholder="Enter a location" size="30">
-          <button id="yelp-places" data-bind="click: requestNewPlace" type="button">Go</button> 
+          <button id="yelp-places" data-bind="click: requestNewPlace" type="button" class="btn btn-default">Go</button> 
+        </div>
+        <div id="category_filter">
+            Choose a category: 
+            <select data-bind="options: availableCountries, value: selectedCategory, event:{ change: categoryChanged}"></select>
+        </div>
         </div>
         <div class="list-group">
-          <ul id="list-view">
-            
+          <ul id="list-view">    
           </ul>     
         </div>       
     </aside>
@@ -26,6 +30,7 @@
 
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
     <script src="js/lib/jquery.min.js"></script>
+    <script src="js/lib/bootstrap.min.js"></script>
     <script src= "js/lib/hmac-sha1.js"></script>
     <script src="js/lib/oauth-signature.min.js"></script>
     <script src="js/lib/knockout-3.2.0.js"></script>

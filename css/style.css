@@ -16,7 +16,7 @@ html, body
 aside {
 	float: left;
 	width: 20%;
-	margin-top: 1%;
+	margin: 1% 1%;
 	overflow-y: scroll;
 	height: 100%;
 }
@@ -26,9 +26,9 @@ aside {
 	margin-top: 20px;
 }
 
-#input-area { 
-	padding-left: 3%;
-	padding-right: 3%;
+#category_filter {
+	margin-top: 1%;
+
 }
 
 ul {
