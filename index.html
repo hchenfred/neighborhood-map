@@ -2,18 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
     <title>My Lunch Place</title>
 </head>
 <body>
     <aside>
-        <div class="input-area">
-          <span class="text">Search for nearby places Using Yelp</span>
-          <input id="pac-input" type="text" data-bind="value: location" placeholder="Enter a location" size="50">
-          <input id="yelp-places" type="button" data-bind="click: yelpRequest" value="Go">  
+        <div id="input-area">
+          <p class="h5">Search nearby places using Yelp</p>
+          <input id="pac-input" type="text" data-bind="value: location" placeholder="Enter a location" size="30">
+          <button id="yelp-places" data-bind="click: requestNewPlace" type="button">Go</button> 
         </div>
-       
+        <div class="list-group">
+          <ul id="list-view">
+            
+          </ul>     
+        </div>       
     </aside>
     <div id="map">
     </div>
