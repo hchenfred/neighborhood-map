@@ -2,6 +2,8 @@
 var map;
 var markers = [];
 var place = {};
+var yelpResponse = {};
+var filteredYelpResponse = {};
 
 
 
@@ -103,6 +105,7 @@ function setMapOnAll(map, markers) {
 }
 
 function yelpRequest(loc, categoryFilter='') {
+    yelpResponse = {};
     function nonce_generate() {
       return (Math.floor(Math.random() * 1e12).toString());
     }
@@ -138,6 +141,7 @@ function yelpRequest(loc, categoryFilter='') {
       jsonpCallback: 'cb',
       success: function(results) {
         console.log("SUCCCESS! %o", results);
+        yelpResponse = results;
         processYelpResults(results);
       },
       error: function(error) {
@@ -170,6 +174,9 @@ function processYelpResults(results) {
     for (var i = 0; i < results.businesses.length; i++) {
       var currBusiness = results.businesses[i];
       var currLocation = currBusiness.location.coordinate;
+      if (currLocation == null) {
+        alert("the location does not exist, please enter another address");
+      }
       var coordinates = {lat: currLocation.latitude, lng: currLocation.longitude};
       var marker = new google.maps.Marker({
           map: map,
@@ -193,23 +200,27 @@ function processYelpResults(results) {
       //add event listener for the list item in list-view
       document.getElementById('list' + i.toString()).addEventListener('mouseover', (function(x, infowindow) {
         return function() {
+          markers[x].setAnimation(google.maps.Animation.BOUNCE);     
           infowindow.open(map, markers[x]);
         }
       })(i, infowindow));
       document.getElementById('list' + i.toString()).addEventListener('mouseout', (function(x, infowindow) {
         return function() {
+          markers[x].setAnimation(null);
           infowindow.close();
         }
       })(i, infowindow));
       //add event listener for markers
-      markers[i].addListener('mouseover', (function(x, infowindow) {          
+      markers[i].addListener('mouseover', (function(x, infowindow) { 
         return function() {
+          markers[x].setAnimation(google.maps.Animation.BOUNCE);     
           infowindow.open(map, markers[x]);
         };
       })(i, infowindow));
       
       markers[i].addListener('mouseout', (function(x, infowindow) {
         return function() {
+          markers[x].setAnimation(null);
           infowindow.close();
         }
       })(i, infowindow));
@@ -223,6 +234,20 @@ function isEmpty(obj) {
             return false;
     }
     return true;
+}
+
+function filter(yelpResponse, selectedCategory) {
+  filteredYelpResponse.businesses = [];
+  var businesses = yelpResponse.businesses;
+  for (var i = 0; i < businesses.length; i++) {
+    var currBusiness = businesses[i];
+    for (var j = 0; j < currBusiness.categories.length; j++) {
+      if (currBusiness.categories[j][1] === selectedCategory) {
+        filteredYelpResponse.businesses.push(currBusiness);
+      }
+    }
+  }
+
 }
 
 
@@ -239,11 +264,17 @@ var ViewModel = function() {
     self.categoryChanged = function() {
         //console.log('current category is ' + self.selectedCategory());
         if (self.selectedCategory() === 'All') {
-          self.requestNewPlace();
+          if (yelpResponse !== null) {
+            processYelpResults(yelpResponse);
+          }
         } else {
+          //clean up filterYelpResponse
+          filteredYelpResponse = {};
           var formattedCategory = self.selectedCategory().replace(/\s+/g, '').toLowerCase();
           console.log(formattedCategory);
-          yelpRequest(self.location(), formattedCategory);
+          filter(yelpResponse, formattedCategory);
+          console.log("hello %o", filteredYelpResponse);
+          processYelpResults(filteredYelpResponse);
         }
 
     }
