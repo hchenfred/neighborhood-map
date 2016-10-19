@@ -17,10 +17,12 @@
         </div>
         <div id="category_filter">
             Choose a category: 
-            <select data-bind="options: availableCountries, value: selectedCategory, event:{ change: categoryChanged}"></select>
+            <select data-bind="options: availableCategories, optionsText: 'categoryName', value: selectedCategory, event:{ change: categoryChanged}"></select>
         </div>
+        <div>
+          <button data-bind="click: toggleList">Show List View</button>
         </div>
-        <div class="list-group">
+        <div class="list-group" data-bind="visible: visibleList">
           <ul id="list-view">    
           </ul>     
         </div>       

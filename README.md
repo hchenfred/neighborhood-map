@@ -28,8 +28,11 @@ The app lists 20 places to eat around the address that your entered.
 * To assign observable a value, must use ko.observable(valueToBeAssigned)
 * Use closure to handle markers event listener
 * knockout framework does not need event listener, it uses data binding instead
+* create a toggle menu using knockout "data-bind="visiable: "
 
 ## Challenge Faced
 * How to organize code (Google Map, Yelp API and knockout should be separated)
 * How to decide which variables are in knockout viewMode? Think about whether the variable has interactions with DOM element
 * Set eventlistener in a for loop (use JavaScript closure)
+
+

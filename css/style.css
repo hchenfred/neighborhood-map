@@ -43,14 +43,10 @@ ul {
 
 /* Landscape phone to portrait tablet */
 @media (max-width: 767px) { 
-	#list-view {
-		display: none;
-	}
-
 	aside {
 		float: none;
 		width: 100%;
-		height: 10%;
+		height: 15%;
 	}
 }
 

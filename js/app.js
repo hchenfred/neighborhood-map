@@ -1,15 +1,16 @@
-//** Model **//
 var map;
 var markers = [];
 var place = {};
 var yelpResponse = {};
 var filteredYelpResponse = {};
+var Category = function(name, yelp) {
+  this.categoryName = name,
+  this.categoryUsedForYelp = yelp
+};
 
 
 
-
-//** ViewModel **//
-var initMap = function() {
+var initMap = function(categories) {
     map = new google.maps.Map(document.getElementById('map'), {
       center: {lat: 37.7779436, lng: -122.4152976},  
       zoom: 14
@@ -72,7 +73,7 @@ var initMap = function() {
       infowindow.open(map, marker);
       */
     });
-    yelpRequest('San Francisco');
+    //yelpRequest('San Francisco', categories);
 };
 
 
@@ -104,12 +105,14 @@ function setMapOnAll(map, markers) {
   }
 }
 
-function yelpRequest(loc, categoryFilter='') {
+//loc is a knockout observable
+//categories is a knockout observable array
+function yelpRequest(loc, categories, categoryFilter='') {
+    //console.log("categories in yelpResponse is + " + categories);
     yelpResponse = {};
     function nonce_generate() {
       return (Math.floor(Math.random() * 1e12).toString());
     }
-    //console.log("location is " + loc);
     if (!isEmpty(place)) {
       loc = place.formatted_address;
     }
@@ -142,7 +145,7 @@ function yelpRequest(loc, categoryFilter='') {
       success: function(results) {
         console.log("SUCCCESS! %o", results);
         yelpResponse = results;
-        processYelpResults(results);
+        processYelpResults(results, categories);
       },
       error: function(error) {
         alert('Yelp API response error ' + error);
@@ -155,7 +158,7 @@ function yelpRequest(loc, categoryFilter='') {
 
 
 // process response from Yelp 
-function processYelpResults(results) {
+function processYelpResults(results, categories) {
     //remove all markers on the map first
     //setMapOnAll(null);
     setMapOnAll(null, markers);
@@ -173,6 +176,10 @@ function processYelpResults(results) {
     );  
     for (var i = 0; i < results.businesses.length; i++) {
       var currBusiness = results.businesses[i];
+      for (var j = 0; j < currBusiness.categories.length; j++) {
+        categories.push(new Category(currBusiness.categories[j][0], currBusiness.categories[j][1]));
+      }
+      
       var currLocation = currBusiness.location.coordinate;
       if (currLocation == null) {
         alert("the location does not exist, please enter another address");
@@ -225,6 +232,7 @@ function processYelpResults(results) {
         }
       })(i, infowindow));
     }
+    console.log('%o', categories);
 }
 
 //check if an object is empty
@@ -255,12 +263,20 @@ var ViewModel = function() {
     var self = this;
     self.location = ko.observable('San Francisco');
     self.businesses = ko.observableArray();
-    self.availableCountries = ['All', 'Delis', 'Burgers', 'Asian Fusion', 'Vietnamese', 'Greek'];
+    self.availableCategories = ko.observableArray();
+    self.availableCategories.push(new Category('All', 'all'));
     self.selectedCategory = ko.observable('All');
+    self.visibleList = ko.observable(false);
+    self.toggleList = function() {
+      self.visibleList(!self.visibleList());
+    };
    
     self.requestNewPlace = function() {
-        console.log('yelp response is ' + yelpRequest(self.location()));
+        yelpRequest(self.location(), self.availableCategories());
+        console.log('here here %o', self.availableCategories());
+        self.availableCategories.push(new Category('pp', 'ppp'));
     };
+
     self.categoryChanged = function() {
         //console.log('current category is ' + self.selectedCategory());
         if (self.selectedCategory() === 'All') {
@@ -276,8 +292,8 @@ var ViewModel = function() {
           console.log("hello %o", filteredYelpResponse);
           processYelpResults(filteredYelpResponse);
         }
+    };
 
-    }
 };
 
 var viewModel = new ViewModel();
