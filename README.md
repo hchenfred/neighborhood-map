@@ -2,10 +2,8 @@
 ============================
 ### Getting started
 
-####Part 1: Optimize PageSpeed Insights score for index.html
-
 1. Check out the repository
-1. To inspect the site on your phone, you can run a local server
+1. To inspect the site on your phone or desktop browser, you can run a local server
 
   ```bash
   $> cd /path/to/your-project-folder
@@ -13,7 +11,6 @@
   ```
 
 1. Open a browser and visit localhost:8080
-1. Download and install [ngrok](https://ngrok.com/) to the top-level of your project directory to make your local server accessible remotely.
 
 ### Instructions
 * Enter the address where you would like to search your lunch places.
