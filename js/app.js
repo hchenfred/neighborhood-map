@@ -1,11 +1,69 @@
 var map;
-var markers = [];
 var place = {};
 var yelpResponse = {};
 var filteredYelpResponse = {};
 var Category = function(name, yelp) {
-  this.categoryName = name,
-  this.categoryUsedForYelp = yelp
+  this.categoryName = name;
+  this.categoryUsedForYelp = yelp;
+};
+var Restaurant = function(index, businesses, marker, contentString, infowindow) {
+  this.index = index;
+  this.businesses = businesses;
+  this.marker = marker;
+  this.contentString = contentString;
+  this.infowindow = infowindow;
+} ;
+var ViewModel = function() {
+    var self = this;
+    self.location = ko.observable('San Francisco');
+    self.businesses = ko.observableArray();
+    self.availableCategories = ko.observableArray();
+    self.availableCategories.push(new Category('All', 'all'));
+    self.selectedCategory = ko.observable(new Category('All', 'all'));
+    self.visibleList = ko.observable(false);
+    self.restaurants = ko.observableArray();
+    self.toggleList = function() {
+      self.visibleList(!self.visibleList());
+    };
+
+    self.clickListItem = function(restaurant) {
+      var marker = restaurant.marker;
+      var infowindow = restaurant.infowindow;
+
+      if (marker.getAnimation() !== null) {
+        marker.setAnimation(null);
+        infowindow.close();
+      } else {
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        infowindow.open(map, restaurant.marker);
+      }
+    };
+
+   
+    self.requestNewPlace = function() {
+      yelpRequest(self.location(), self.availableCategories, self.restaurants);
+        //console.log('here here %o', self.availableCategories());
+    };
+
+    self.categoryChanged = function() {
+      if (self.selectedCategory() === 'All') {
+        if (yelpResponse !== null) {
+          processYelpResults(yelpResponse);
+        }
+      } else {
+        //clean up filterYelpResponse
+        filteredYelpResponse = {};
+        var currCategory = self.selectedCategory().categoryUsedForYelp;
+        console.log('selected category is ' + currCategory);
+        filter(self.restaurants(), currCategory);
+        
+      }
+    };
+};
+
+
+var googleError = function() {
+  alert('Google Page is not loaded correctly');
 };
 
 
@@ -33,9 +91,6 @@ var initMap = function(categories) {
       infowindow.close();
       marker.setVisible(false);
       place = autocomplete.getPlace();
-      console.log(self.location);
-      
-      console.log(place);
       if (!place.geometry) {
         window.alert("Autocomplete's returned place contains no geometry");
         return;
@@ -59,21 +114,10 @@ var initMap = function(categories) {
       }));
       marker.setPosition(place.geometry.location);
       marker.setVisible(true);
-
-      /*var address = '';
-      if (place.address_components) {
-        address = [
-          (place.address_components[0] && place.address_components[0].short_name || ''),
-          (place.address_components[1] && place.address_components[1].short_name || ''),
-          (place.address_components[2] && place.address_components[2].short_name || '')
-        ].join(' ');
-      }
-
-      infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-      infowindow.open(map, marker);
-      */
     });
-    //yelpRequest('San Francisco', categories);
+    var viewModel = new ViewModel();
+    ko.applyBindings(viewModel);
+    viewModel.requestNewPlace();
 };
 
 
@@ -92,22 +136,22 @@ input r is an element in the yelp response array
         text += '<span id="yelp-category">' + r.categories[i][0] + ',  </span>';
       }
     }
-    text += '<br/>'
+    text += '<br/>';
     text += r.location.display_address[0] + '<br/>' + r.location.display_address[1] + ', ' + r.location.display_address[2] + '<br/><br/>';
     text += '</div>';
     return text;
 }
 
 // Sets the map on all markers in the array.
-function setMapOnAll(map, markers) {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
+function setMapOnAll(map, restaurants) {
+  for (var i = 0; i < restaurants.length; i++) {
+    restaurants[i].marker.setMap(map);
   }
 }
 
 //loc is a knockout observable
 //categories is a knockout observable array
-function yelpRequest(loc, categories, categoryFilter='') {
+function yelpRequest(loc, categories, restaurants, categoryFilter='') {
     //console.log("categories in yelpResponse is + " + categories);
     yelpResponse = {};
     function nonce_generate() {
@@ -145,7 +189,7 @@ function yelpRequest(loc, categories, categoryFilter='') {
       success: function(results) {
         console.log("SUCCCESS! %o", results);
         yelpResponse = results;
-        processYelpResults(results, categories);
+        processYelpResults(results, categories, restaurants);
       },
       error: function(error) {
         alert('Yelp API response error ' + error);
@@ -154,19 +198,15 @@ function yelpRequest(loc, categories, categoryFilter='') {
 
     // Send AJAX query via jQuery library.
     $.ajax(settings);
-};
+}
 
 
 // process response from Yelp 
-function processYelpResults(results, categories) {
+function processYelpResults(results, categories, restaurants) {
     //remove all markers on the map first
-    //setMapOnAll(null);
-    setMapOnAll(null, markers);
-    markers = [];
-    //remove all the contents in the list view
-    document.getElementById('list-view').innerHTML = "";
-    //self.businesses.removeAll();
-    //self.businesses = ko.observableArray(results.businesses);
+    setMapOnAll(null, restaurants);
+    restaurants.removeAll();
+    $('#list-view').innerHTML = "";
     var pinIcon = new google.maps.MarkerImage(
         "img/food.png",
         null, /* size is determined at runtime */
@@ -174,15 +214,14 @@ function processYelpResults(results, categories) {
         null, /* anchor is bottom center of the scaled image */
         new google.maps.Size(40, 40)
     );  
-    for (var i = 0; i < results.businesses.length; i++) {
+    for (var i = 0; i < results.businesses.length; i++) {    
       var currBusiness = results.businesses[i];
       for (var j = 0; j < currBusiness.categories.length; j++) {
         categories.push(new Category(currBusiness.categories[j][0], currBusiness.categories[j][1]));
       }
-      
       var currLocation = currBusiness.location.coordinate;
-      if (currLocation == null) {
-        alert("the location does not exist, please enter another address");
+      if (currLocation === null || currLocation === undefined) {
+        alert("coordinates for " + currBusiness.name + " is not avaiable, this location is not displayed");
       }
       var coordinates = {lat: currLocation.latitude, lng: currLocation.longitude};
       var marker = new google.maps.Marker({
@@ -192,47 +231,28 @@ function processYelpResults(results, categories) {
           animation: google.maps.Animation.DROP,
           position: coordinates
       });
-      markers.push(marker);
       //create a card in list-view element
       var contentString = createInfoWindow(currBusiness);
-      var listView = document.getElementById('list-view');
-      var node = document.createElement('li');
-      node.setAttribute('id', 'list'+i.toString());
-      node.innerHTML = contentString;
-      listView.appendChild(node);
       var infowindow = new google.maps.InfoWindow({
         content: contentString
       });
-      var cardElement = document.getElementById
-      //add event listener for the list item in list-view
-      document.getElementById('list' + i.toString()).addEventListener('mouseover', (function(x, infowindow) {
-        return function() {
-          markers[x].setAnimation(google.maps.Animation.BOUNCE);     
-          infowindow.open(map, markers[x]);
-        }
-      })(i, infowindow));
-      document.getElementById('list' + i.toString()).addEventListener('mouseout', (function(x, infowindow) {
-        return function() {
-          markers[x].setAnimation(null);
-          infowindow.close();
-        }
-      })(i, infowindow));
+      var restaurant = new Restaurant(i, currBusiness, marker, contentString, infowindow);
+      restaurants.push(restaurant);
       //add event listener for markers
-      markers[i].addListener('mouseover', (function(x, infowindow) { 
+      restaurants()[i].marker.addListener('mouseover', (function(x, infowindow) { 
         return function() {
-          markers[x].setAnimation(google.maps.Animation.BOUNCE);     
-          infowindow.open(map, markers[x]);
+          restaurants()[x].marker.setAnimation(google.maps.Animation.BOUNCE);     
+          infowindow.open(map, restaurants()[x].marker);
         };
       })(i, infowindow));
       
-      markers[i].addListener('mouseout', (function(x, infowindow) {
+      restaurants()[i].marker.addListener('mouseout', (function(x, infowindow) {
         return function() {
-          markers[x].setAnimation(null);
+          restaurants()[x].marker.setAnimation(null);
           infowindow.close();
-        }
+        };
       })(i, infowindow));
     }
-    console.log('%o', categories);
 }
 
 //check if an object is empty
@@ -244,57 +264,42 @@ function isEmpty(obj) {
     return true;
 }
 
-function filter(yelpResponse, selectedCategory) {
-  filteredYelpResponse.businesses = [];
-  var businesses = yelpResponse.businesses;
-  for (var i = 0; i < businesses.length; i++) {
-    var currBusiness = businesses[i];
-    for (var j = 0; j < currBusiness.categories.length; j++) {
-      if (currBusiness.categories[j][1] === selectedCategory) {
-        filteredYelpResponse.businesses.push(currBusiness);
-      }
-    }
+//filter list view and markers in Google Maps based on user selected category
+function filter(restaurants, currCategory) {
+  //before each filter, first remove previous filter
+  for (var i = 0; i < restaurants.length; i++) {
+    $('#list'+i.toString()).show();
+    restaurants[i].marker.setMap(map);
   }
 
+  if (currCategory === 'all') {
+    return;
+  }
+
+  for (var i = 0; i < restaurants.length; i++) {
+    var hide = true;
+    var restaurant = restaurants[i];
+    var categories = restaurant.businesses.categories;
+    for (var j = 0; j < categories.length; j++) {
+      if (categories[j][1] === currCategory) {
+        hide = false;
+      }
+    }
+    if (hide) {
+      restaurant.marker.setMap(null);
+      $('#list'+i.toString()).hide();
+    } else {
+      restaurant.marker.setMap(map);
+    }
+    hide = true;
+  }
 }
 
 
-var ViewModel = function() {
-    var self = this;
-    self.location = ko.observable('San Francisco');
-    self.businesses = ko.observableArray();
-    self.availableCategories = ko.observableArray();
-    self.availableCategories.push(new Category('All', 'all'));
-    self.selectedCategory = ko.observable('All');
-    self.visibleList = ko.observable(false);
-    self.toggleList = function() {
-      self.visibleList(!self.visibleList());
-    };
-   
-    self.requestNewPlace = function() {
-        yelpRequest(self.location(), self.availableCategories());
-        console.log('here here %o', self.availableCategories());
-        self.availableCategories.push(new Category('pp', 'ppp'));
-    };
 
-    self.categoryChanged = function() {
-        //console.log('current category is ' + self.selectedCategory());
-        if (self.selectedCategory() === 'All') {
-          if (yelpResponse !== null) {
-            processYelpResults(yelpResponse);
-          }
-        } else {
-          //clean up filterYelpResponse
-          filteredYelpResponse = {};
-          var formattedCategory = self.selectedCategory().replace(/\s+/g, '').toLowerCase();
-          console.log(formattedCategory);
-          filter(yelpResponse, formattedCategory);
-          console.log("hello %o", filteredYelpResponse);
-          processYelpResults(filteredYelpResponse);
-        }
-    };
 
-};
 
-var viewModel = new ViewModel();
-ko.applyBindings(viewModel);
+
+
+
+

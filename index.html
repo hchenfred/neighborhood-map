@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#db5945">
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" type="image/png" href="img/favicon-96x96.png">
     <title>My Lunch Place</title>
 </head>
 <body>
@@ -15,7 +17,7 @@
           <input id="pac-input" type="text" data-bind="value: location" placeholder="Enter a location" size="30">
           <button id="yelp-places" data-bind="click: requestNewPlace" type="button" class="btn btn-default">Go</button> 
         </div>
-        <div id="category_filter">
+        <div id="category-filter">
             Choose a category: 
             <select data-bind="options: availableCategories, optionsText: 'categoryName', value: selectedCategory, event:{ change: categoryChanged}"></select>
         </div>
@@ -23,13 +25,12 @@
           <button data-bind="click: toggleList">Show List View</button>
         </div>
         <div class="list-group" data-bind="visible: visibleList">
-          <ul id="list-view">    
+          <ul id="list-view" data-bind="foreach: restaurants">    
+            <li data-bind="html: $data.contentString, attr: {id: 'list'+$data.index}, click: $parent.clickListItem"></li>
           </ul>     
         </div>       
     </aside>
-    <div id="map">
-    </div>
-
+    <div id="map"></div>
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
     <script src="js/lib/jquery.min.js"></script>
     <script src="js/lib/bootstrap.min.js"></script>
@@ -37,8 +38,7 @@
     <script src="js/lib/oauth-signature.min.js"></script>
     <script src="js/lib/knockout-3.2.0.js"></script>
     <script src="js/app.js"></script>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyChkGJbVaG7HZWDAiSsyXe_7mupndlvMyU&libraries=places&callback=initMap" async defer></script>
-   
-    
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyChkGJbVaG7HZWDAiSsyXe_7mupndlvMyU&libraries=places&callback=initMap" onerror="googleError()"
+       async defer></script>   
 </body>
 </html>
