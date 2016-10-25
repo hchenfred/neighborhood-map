@@ -46,6 +46,7 @@ var ViewModel = function() {
     };
 
     self.categoryChanged = function() {
+      if (self.availableCategories().length === 0) return;
       if (self.selectedCategory() === 'All') {
         if (yelpResponse !== null) {
           processYelpResults(yelpResponse);
@@ -55,8 +56,7 @@ var ViewModel = function() {
         filteredYelpResponse = {};
         var currCategory = self.selectedCategory().categoryUsedForYelp;
         console.log('selected category is ' + currCategory);
-        filter(self.restaurants(), currCategory);
-        
+        filter(self.restaurants(), currCategory); 
       }
     };
 };
@@ -144,8 +144,8 @@ input r is an element in the yelp response array
 
 // Sets the map on all markers in the array.
 function setMapOnAll(map, restaurants) {
-  for (var i = 0; i < restaurants.length; i++) {
-    restaurants[i].marker.setMap(map);
+  for (var i = 0; i < restaurants().length; i++) {
+    restaurants()[i].marker.setMap(map);
   }
 }
 
@@ -206,7 +206,8 @@ function processYelpResults(results, categories, restaurants) {
     //remove all markers on the map first
     setMapOnAll(null, restaurants);
     restaurants.removeAll();
-    $('#list-view').innerHTML = "";
+    categories.removeAll();
+    categories.push(new Category('All', 'all'));
     var pinIcon = new google.maps.MarkerImage(
         "img/food.png",
         null, /* size is determined at runtime */
@@ -239,17 +240,16 @@ function processYelpResults(results, categories, restaurants) {
       var restaurant = new Restaurant(i, currBusiness, marker, contentString, infowindow);
       restaurants.push(restaurant);
       //add event listener for markers
-      restaurants()[i].marker.addListener('mouseover', (function(x, infowindow) { 
+      restaurants()[i].marker.addListener('click', (function(x, infowindow) { 
         return function() {
-          restaurants()[x].marker.setAnimation(google.maps.Animation.BOUNCE);     
-          infowindow.open(map, restaurants()[x].marker);
-        };
-      })(i, infowindow));
-      
-      restaurants()[i].marker.addListener('mouseout', (function(x, infowindow) {
-        return function() {
-          restaurants()[x].marker.setAnimation(null);
-          infowindow.close();
+          var currMarker = restaurants()[x].marker;
+          if (currMarker.getAnimation() !== null) {
+            currMarker.setAnimation(null);
+            infowindow.close();
+          } else {
+            currMarker.setAnimation(google.maps.Animation.BOUNCE);     
+            infowindow.open(map, currMarker);
+          }
         };
       })(i, infowindow));
     }
@@ -286,10 +286,11 @@ function filter(restaurants, currCategory) {
       }
     }
     if (hide) {
-      restaurant.marker.setMap(null);
+      //restaurant.marker.setMap(null);
+      restaurant.marker.setVisible(false);
       $('#list'+i.toString()).hide();
     } else {
-      restaurant.marker.setMap(map);
+      restaurant.marker.setVisible(true);
     }
     hide = true;
   }
