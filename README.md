@@ -41,6 +41,11 @@ The app lists 20 places to eat around the address that your entered.
 * Use closure to handle markers event listener
 * knockout framework does not need event listener, it uses data binding instead
 * create a toggle menu using knockout "data-bind="visiable: "
+* You can declare one instance of the InfoWindow object in the outer scope instead, initialize it inside map initialization function and:
+Use infowindow.setContent method to assign location specific details to infowindow when a marker is activated
+Use infowindow.open method to open infowindow for the active marker.
+Note that with this solution, app will also be able to avoid multiple infowindows from being opened, which is not a very good UX feature.
+* To make sure there is only one animated marker and one information window on a marker showing up at the same time, we can define a global variable called currMarker and one called infoWindow. Add an event listener to the infoWindow, when it is clickClosed, stop the animation of current marker. 
 
 ### Challenge Faced
 * How to organize code (Google Map, Yelp API and knockout should be separated)
